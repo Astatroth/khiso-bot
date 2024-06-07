@@ -1,3 +1,25 @@
 {
-  "restarting": "Bot is restarting..."
+  "restarting": "Bot is restarting...",
+  "select_language": "Select language",
+  "demand_subscription": "Please subscribe to the following channels in order to continue:",
+  "confirm_subscription": "I have subscribed!",
+  "not_subscribed": "You have not subscribed to all suggested channels.",
+  "share_your_contact": "Press \"Share contact\" button to share your phone number",
+  "share_contact": "Share contact",
+  "enter_full_name": "Enter your first and last names separated by space, eg. John Doe",
+  "enter_date_of_birth": "Enter your date of birth (dd.mm.yyyy)",
+  "select_gender": "Select your gender",
+  "gender_female": "Female",
+  "gender_male": "Male",
+  "prev": "Previous",
+  "next": "Next",
+  "select_region": "Select your region",
+  "select_district": "Select your district",
+  "select_institution": "Select your institution",
+  "select_grade": "Select your grade",
+  "back": "Back",
+  "confirmation_code_sent": "We have sent a SMS with the confirmation code to your phone number",
+  "enter_confirmation_code": "Enter the confirmation code below:",
+  "confirmation_code_incorrect": "The code you have entered is invalid.",
+  "greet": "Hello, {}!"
 }

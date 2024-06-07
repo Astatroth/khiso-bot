@@ -3,6 +3,7 @@ import logging
 import os
 from core.AppConfig import AppConfig
 from kink import inject
+from pprint import pformat
 
 
 @inject
@@ -11,7 +12,7 @@ class Logger:
         filename = os.path.dirname(__file__) + '/../storage/logs/{:%Y-%m-%d}.log'.format(datetime.datetime.now())
 
         logging.basicConfig(
-            filename=filename if not config.APP_DEBUG else None,
+            filename=filename if config.APP_DEBUG.lower() == "false" else None,
             level="INFO",
             format='%(asctime)s - %(name)s - (%(filename)s).%(funcName)s(%(lineno)d) - %(levelname)s - %(message)s',
             force=True
@@ -20,7 +21,7 @@ class Logger:
         self.logger = logging.getLogger()
 
     def info(self, msg, extra=None):
-        self.logger.info(msg, extra=extra)
+        self.logger.info(pformat(msg), extra=extra)
 
     def error(self, msg, extra=None):
         self.logger.error(msg, extra=extra)

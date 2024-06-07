@@ -20,7 +20,7 @@ class Application:
         self.state_manager = StateManager()
 
     async def error_handler(self, update: object, context: CallbackContext) -> int:
-        self.log.error(msg="Exception while handling an update", extra=context.error)
+        self.log.error(msg=f"Exception while handling an update: {context.error}")
 
         if isinstance(update, Update):
             await context.bot.send_message(
@@ -51,6 +51,6 @@ class Application:
             application.run_webhook(
                 listen=self.config.APP_IP,
                 port=self.config.APP_PORT,
-                url_path=self.config.BOT_URL + self.config.BOT_TOKEN,
+                url_path=self.config.BOT_URL,
                 webhook_url=self.config.BOT_WEBHOOK_URL
             )

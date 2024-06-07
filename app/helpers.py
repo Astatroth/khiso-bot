@@ -13,13 +13,6 @@ def sanitize(string: str) -> str:
     return escaped_string
 
 
-def flag(code):
-    offset = 127462 + ord('A')
-    code = code.upper()
-
-    return chr(ord(code[0]) + offset) + chr(ord(code[1]) + offset)
-
-
 def remove_emoji(string):
     regex_pattern = re.compile(pattern="["
                                         u"\U0001F600-\U0001F64F"  # emoticons

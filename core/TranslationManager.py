@@ -3,6 +3,7 @@ import os
 from core.AppConfig import AppConfig
 from kink import inject
 
+
 @inject
 class TranslationManager:
     def __init__(self, config: AppConfig):
@@ -11,6 +12,12 @@ class TranslationManager:
         i18n.set('skip_locale_root_data', True)
         i18n.set('locale', config.APP_LOCALE)
         i18n.set('fallback', config.APP_FALLBACK_LOCALE)
+
+    def get_locale(self) -> str:
+        return i18n.get('locale')
+
+    def set_locale(self, locale: str) -> None:
+        i18n.set('locale', locale)
 
     def t(self, key: str) -> str:
         return i18n.t(key)
