@@ -132,7 +132,7 @@ class Controller(BaseHandler):
 
     async def request_name(self, update: Update, context: CallbackContext) -> int:
         """ Ask the user for his first name and last name """
-        await update.message.reply_text(self.i18n.t("strings.enter_full_name"))
+        await update.message.reply_text(self.i18n.t("strings.enter_full_name"), reply_markup=None)
 
         return State.AWAIT_NAME
 
