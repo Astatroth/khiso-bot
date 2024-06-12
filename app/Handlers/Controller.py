@@ -412,7 +412,7 @@ class Controller(BaseHandler):
                     response = Olympiad().start(value, context.user_data.get("student").id)
 
                     if response is None:
-                        # await update.callback_query.edit_message_reply_markup(reply_markup=None)
+                        await update.callback_query.edit_message_reply_markup(reply_markup=None)
                         await update.callback_query.message.reply_text(self.i18n.t("errors.whoops"))
                         await update.callback_query.answer()
 
@@ -428,7 +428,7 @@ class Controller(BaseHandler):
 
                         context.user_data["olympiad_id"] = value
                         await update.callback_query.answer(response.get("message"))
-                        #await update.callback_query.edit_message_reply_markup(reply_markup=None)
+                        await update.callback_query.edit_message_reply_markup(reply_markup=None)
 
                         return await self.request_question(update, context)
                 case _:
