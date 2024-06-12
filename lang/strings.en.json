@@ -22,5 +22,6 @@
   "enter_confirmation_code": "Enter the confirmation code below:",
   "confirmation_code_incorrect": "The code you have entered is invalid.",
   "greet": "Hello, {}!",
-  "sign_up_success": "You have signed up to the olympiad. You will receive a message when it starts."
+  "sign_up_success": "You have signed up to the olympiad. You will receive a message when it starts.",
+  "answer_accepted": "Answer accepted"
 }

@@ -1,5 +1,7 @@
+import random
 import telegram.error
 
+from app.Classes.Olympiad import Olympiad
 from app.Classes.Student import Student
 from app.Classes.Sms import Sms
 from app.Handlers.BaseHandler import BaseHandler
@@ -382,26 +384,121 @@ class Controller(BaseHandler):
         student = context.user_data["student"]
 
         if query is not None:
-            command, id = query.data.split("_")
+            command, value = query.data.split("_")
 
-            if command == "signup":
-                # Try to sign up to olympiad
-                response = student.signup(id)
-                if response is None:
-                    await update.callback_query.edit_message_reply_markup(reply_markup=None)
-                    await update.callback_query.message.reply_text(self.i18n.t("errors.whoops"))
-                    await update.callback_query.answer()
-
-                    return State.IDLE
-                else:
-                    status = response.get("status")
-                    if status == 0:
+            match command:
+                case "signup":
+                    # Try to sign up to olympiad
+                    response = student.signup(value)
+                    if response is None:
                         await update.callback_query.edit_message_reply_markup(reply_markup=None)
-                        await update.callback_query.message.reply_text(response.get("error")["message"])
+                        await update.callback_query.message.reply_text(self.i18n.t("errors.whoops"))
                         await update.callback_query.answer()
+
+                        return State.IDLE
                     else:
-                        await update.callback_query.edit_message_reply_markup(reply_markup=None)
-                        await update.callback_query.message.reply_text(self.i18n.t("strings.sign_up_success"))
+                        status = response.get("status")
+                        if status == 0:
+                            await update.callback_query.edit_message_reply_markup(reply_markup=None)
+                            await update.callback_query.message.reply_text(response.get("error")["message"])
+                            await update.callback_query.answer()
+                        else:
+                            await update.callback_query.edit_message_reply_markup(reply_markup=None)
+                            await update.callback_query.message.reply_text(self.i18n.t("strings.sign_up_success"))
+                            await update.callback_query.answer()
+
+                        return State.IDLE
+                case "start":
+                    response = Olympiad().start(value, context.user_data.get("student").id)
+
+                    if response is None:
+                        # await update.callback_query.edit_message_reply_markup(reply_markup=None)
+                        await update.callback_query.message.reply_text(self.i18n.t("errors.whoops"))
                         await update.callback_query.answer()
 
-        return State.IDLE  # TODO: update this method after news and olympics at backend
+                        return State.IDLE
+                    else:
+                        status = response.get("status")
+                        if status == 0:
+                            await update.callback_query.edit_message_reply_markup(reply_markup=None)
+                            await update.callback_query.message.reply_text(response.get("error")["message"])
+                            await update.callback_query.answer()
+
+                            return State.IDLE
+
+                        context.user_data["olympiad_id"] = value
+                        await update.callback_query.answer(response.get("message"))
+                        #await update.callback_query.edit_message_reply_markup(reply_markup=None)
+
+                        return await self.request_question(update, context)
+                case _:
+                    await update.callback_query.edit_message_reply_markup(reply_markup=None)
+
+        return State.IDLE
+
+    async def request_question(self, update: Update, context: CallbackContext) -> int:
+        if context.user_data.get("question_number") is None:
+            context.user_data["question_number"] = 1
+
+        response = Olympiad().get_question(
+            context.user_data.get("olympiad_id"),
+            context.user_data.get("student").id,
+            context.user_data.get("question_number")
+        )
+
+        if response.get("status") == 0:
+            await update.callback_query.message.chat.send_message(response.get("error")["message"])
+
+            return State.IDLE
+
+        question = response.get("question")
+        question_type = question["type_label"]
+        buttons = []
+
+        for answer in list(question["answers"]):
+            buttons.append((answer["answer"], "answer_{}_{}".format(answer["question_id"], answer["id"])))
+
+        random.shuffle(buttons)
+
+        match question_type:
+            case "Image":
+                await update.callback_query.message.chat.send_photo(
+                    photo=question["content"]["url"],
+                    reply_markup=Keyboard.inline(buttons)
+                )
+            case "Document":
+                await update.callback_query.message.chat.send_document(
+                    document=question["content"]["url"],
+                    reply_markup=Keyboard.inline(buttons)
+                )
+            case _:
+                await update.callback_query.message.chat.send_message(
+                    text=question["content"],
+                    reply_markup=Keyboard.inline(buttons)
+                )
+
+        return State.AWAIT_ANSWER
+
+    async def accept_answer(self, update: Update, context: CallbackContext) -> int:
+        answer = update.callback_query.data
+        command, question_id, answer_id = answer.split("_")
+
+        response = Olympiad().send_answer(
+            question_id,
+            answer_id,
+            context.user_data.get("student").id
+        )
+
+        if response.get("status") == 0:
+            await update.callback_query.answer()
+            await update.callback_query.message.delete()
+            await update.callback_query.message.chat.send_message(response.get("error")["message"])
+
+            return State.IDLE
+
+        await update.callback_query.answer(self.i18n.t("strings.answer_accepted"))
+        await update.callback_query.message.delete()
+
+        context.user_data["question_number"] += 1
+
+        return await self.request_question(update, context)

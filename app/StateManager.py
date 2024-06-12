@@ -64,6 +64,8 @@ class StateManager:
             State.VALIDATE_CODE: [MessageHandler(filter_confirmation_code, self.controller.validate_confirmation_code)],
             State.IDLE: [
                 MessageHandler(filters.ALL, self.controller.idle),
-                CallbackQueryHandler(self.controller.idle, pattern='^signup_[0-9]+$')
-            ]
+                CallbackQueryHandler(self.controller.idle, pattern='^signup_[0-9]+$'),
+                CallbackQueryHandler(self.controller.idle, pattern='^start_[0-9]+$')
+            ],
+            State.AWAIT_ANSWER: [CallbackQueryHandler(self.controller.accept_answer, pattern='^answer_[0-9]+_[0-9]+$')]
         }

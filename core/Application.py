@@ -43,7 +43,7 @@ class Application:
         )
         application.add_handler(conversation_handler)
 
-        application.add_error_handler(self.error_handler)
+        # application.add_error_handler(self.error_handler)
 
         if self.is_local():
             application.run_polling()

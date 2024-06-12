@@ -13,4 +13,5 @@ class State(Enum):
     AWAIT_INSTITUTION: int = 11
     AWAIT_GRADE: int = 12
     VALIDATE_CODE: int = 13
+    AWAIT_ANSWER: int = 50
     IDLE: int = 1000
