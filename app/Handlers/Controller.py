@@ -377,5 +377,31 @@ class Controller(BaseHandler):
         return State.IDLE
 
     async def idle(self, update: Update, context: CallbackContext):
-        self.logger.info(update.message)
-        return self.end  # TODO: update this method after news and olympics at backend
+        message = update.message
+        query = update.callback_query
+        student = context.user_data["student"]
+
+        if query is not None:
+            command, id = query.data.split("_")
+
+            if command == "signup":
+                # Try to sign up to olympiad
+                response = student.signup(id)
+                if response is None:
+                    await update.callback_query.edit_message_reply_markup(reply_markup=None)
+                    await update.callback_query.message.reply_text(self.i18n.t("errors.whoops"))
+                    await update.callback_query.answer()
+
+                    return State.IDLE
+                else:
+                    status = response.get("status")
+                    if status == 0:
+                        await update.callback_query.edit_message_reply_markup(reply_markup=None)
+                        await update.callback_query.message.reply_text(response.get("error")["message"])
+                        await update.callback_query.answer()
+                    else:
+                        await update.callback_query.edit_message_reply_markup(reply_markup=None)
+                        await update.callback_query.message.reply_text(self.i18n.t("strings.sign_up_success"))
+                        await update.callback_query.answer()
+
+        return State.IDLE  # TODO: update this method after news and olympics at backend

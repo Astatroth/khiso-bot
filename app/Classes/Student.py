@@ -63,6 +63,12 @@ class Student:
             "grade": data.get("grade"),
         })
 
+    def signup(self, olympiad_id: int) -> dict:
+        return self.api.put("olympiad/sign-up", {
+            "student_id": self.id,
+            "olympiad_id": olympiad_id
+        })
+
 
 def student_decorator(func):
     @wraps(func)

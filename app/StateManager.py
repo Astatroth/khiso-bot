@@ -62,5 +62,8 @@ class StateManager:
             ],
             State.AWAIT_GRADE: [CallbackQueryHandler(self.controller.set_grade, pattern='^grade_[0-9]+$')],
             State.VALIDATE_CODE: [MessageHandler(filter_confirmation_code, self.controller.validate_confirmation_code)],
-            State.IDLE: [MessageHandler(filters.ALL, self.controller.idle)]
+            State.IDLE: [
+                MessageHandler(filters.ALL, self.controller.idle),
+                CallbackQueryHandler(self.controller.idle, pattern='^signup_[0-9]+$')
+            ]
         }
