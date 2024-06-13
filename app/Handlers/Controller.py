@@ -465,18 +465,18 @@ class Controller(BaseHandler):
                 await update.callback_query.message.chat.send_photo(
                     photo=question["content"]["url"],
                     caption=self.i18n.t("strings.question").format(context.user_data["question_number"]),
-                    reply_markup=Keyboard.inline(buttons)
+                    reply_markup=Keyboard.inline(buttons, 1)
                 )
             case "Document":
                 await update.callback_query.message.chat.send_document(
                     document=question["content"]["url"],
                     caption=self.i18n.t("strings.question").format(context.user_data["question_number"]),
-                    reply_markup=Keyboard.inline(buttons)
+                    reply_markup=Keyboard.inline(buttons, 1)
                 )
             case _:
                 await update.callback_query.message.chat.send_message(
                     text=self.i18n.t("strings.question").format(context.user_data["question_number"]) + "\r\n\r\n" + question["content"],
-                    reply_markup=Keyboard.inline(buttons)
+                    reply_markup=Keyboard.inline(buttons, 1)
                 )
 
         return State.AWAIT_ANSWER
