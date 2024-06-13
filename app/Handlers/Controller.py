@@ -468,13 +468,13 @@ class Controller(BaseHandler):
         match question_type:
             case "Image":
                 await update.callback_query.message.chat.send_photo(
-                    photo=question["content"]["url"],
+                    photo=question["content"],
                     caption=self.i18n.t("strings.question").format(context.user_data["question_number"]),
                     reply_markup=Keyboard.inline(buttons, 1)
                 )
             case "Document":
                 await update.callback_query.message.chat.send_document(
-                    document=question["content"]["url"],
+                    document=question["content"],
                     caption=self.i18n.t("strings.question").format(context.user_data["question_number"]),
                     reply_markup=Keyboard.inline(buttons, 1)
                 )
