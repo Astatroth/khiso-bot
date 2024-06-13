@@ -47,9 +47,10 @@ class Controller(BaseHandler):
         context.user_data['language'] = update.callback_query.data
         self.i18n.set_locale(update.callback_query.data)
 
+        await update.callback_query.answer()
         await update.callback_query.message.delete()
 
-        return await self.demand_subscription(update, context)
+        return await self.request_contact(update, context)
 
     async def demand_subscription(self, update: Update, context: CallbackContext) ->int:
         """ Demand the user to subscribe to listed channels in order to continue """
@@ -58,7 +59,7 @@ class Controller(BaseHandler):
         context.user_data['is_subscribed'] = 0
         channels = Subscription().get_subscriptions()
         if len(channels) == 0:
-            return await self.request_contact(update, context)
+            return await self.request_name(update, context)
 
         await update.callback_query.answer()
 
@@ -82,7 +83,7 @@ class Controller(BaseHandler):
 
         channels = Subscription().get_subscriptions()
         if len(channels) == 0:
-            return await self.request_contact(update, context)
+            return await self.request_name(update, context)
 
         subscribed_channels = 0
         statuses = [
@@ -111,7 +112,7 @@ class Controller(BaseHandler):
 
         context.user_data['is_subscribed'] = 1
 
-        return await self.request_contact(update, context)
+        return await self.request_name(update, context)
 
     async def request_contact(self, update: Update, context: CallbackContext) -> int:
         """ Display "Share contact" button"""
@@ -130,7 +131,7 @@ class Controller(BaseHandler):
         """ Set the phone number for the current user """
         context.user_data['phone_number'] = update.message.contact.phone_number
 
-        return await self.request_name(update, context)
+        return await self.request_confirmation_code(update, context)
 
     async def request_name(self, update: Update, context: CallbackContext) -> int:
         """ Ask the user for his first name and last name """
@@ -335,17 +336,22 @@ class Controller(BaseHandler):
         command, grade = update.callback_query.data.split("_")
         context.user_data['grade'] = int(grade)
 
+        student = Student(update.callback_query.message.chat.id)
+        student.register(context.user_data)
+        student.authenticate()
+        context.user_data["student"] = student
+
         await update.callback_query.answer()
         await update.callback_query.message.delete()
 
-        return await self.request_confirmation_code(update, context)
+        return await self.greet(update, context)
 
     async def request_confirmation_code(self, update: Update, context: CallbackContext) -> int:
         """ Send SMS with a confirmation code and request it from the user """
 
         Sms().send_code(context.user_data.get("phone_number"), context.user_data.get("language"))
 
-        await update.callback_query.message.chat.send_message(
+        await update.message.chat.send_message(
             self.i18n.t("strings.confirmation_code_sent") + "\r\n\r\n" + self.i18n.t("strings.enter_confirmation_code")
         )
 
@@ -362,19 +368,19 @@ class Controller(BaseHandler):
 
         context.user_data["is_verified"] = 1
 
-        student = Student(update.message.chat.id)
-        student.register(context.user_data)
-        student.authenticate()
-        context.user_data["student"] = student
-
-        return await self.greet(update, context)
+        return await self.demand_subscription(update, context)
 
     async def greet(self, update: Update, context: CallbackContext) -> int:
         """ Greet the user """
 
-        await update.message.reply_text(
-            self.i18n.t("strings.greet").format(context.user_data.get("student").full_name)
-        )
+        if update.message is None:
+            await update.callback_query.message.chat.send_message(
+                self.i18n.t("strings.greet").format(sanitize(context.user_data.get("student").full_name))
+            )
+        else:
+            await update.message.reply_text(
+                self.i18n.t("strings.greet").format(sanitize(context.user_data.get("student").full_name))
+            )
 
         return State.IDLE
 

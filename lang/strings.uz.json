@@ -21,7 +21,7 @@
   "confirmation_code_sent": "Biz sizning telefon raqamingizga tasdiqlash kodi bilan SMS yubordik.",
   "enter_confirmation_code": "Olingan tasdiqlash kodini kiriting:",
   "confirmation_code_incorrect": "Siz noto'g'ri tasdiqlash kodini kiritdingiz.",
-  "greet": "Salom, {}!",
+  "greet": "Salom, {}!\r\n\r\nBot dan muvaffaqiyatli ro'yxatdan o'tdingiz. Olimpiada boshlanishida sizga maxsus havola yuboriladi. Ungacha bizni kuzatishda davom eting!",
   "sign_up_success": "Siz Olimpiadaga muvaffaqiyatli yozildingiz. Olimpiada boshlanganda sizga xabar keladi.",
   "answer_accepted": "Javob qabul qilindi",
   "question": "Savol №{}"

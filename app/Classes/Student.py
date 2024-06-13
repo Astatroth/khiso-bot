@@ -26,6 +26,7 @@ class Student:
 
     def authenticate(self) -> None:
         response = self.api.get(f"students/{self.chat_id}")
+        self.logger.info(response)
         student = response.get("student")
 
         if student is not None:
