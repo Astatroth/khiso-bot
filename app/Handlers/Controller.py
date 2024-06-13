@@ -61,13 +61,11 @@ class Controller(BaseHandler):
         if len(channels) == 0:
             return await self.request_name(update, context)
 
-        await update.callback_query.answer()
-
         message = ""
         for channel in channels:
             message += f"{channel.get('title')}\r\n{channel.get('url')}\r\n\r\n"
 
-        await update.callback_query.message.chat.send_message(
+        await update.message.chat.send_message(
             self.i18n.t("strings.demand_subscription") + "\r\n" + sanitize(message),
             parse_mode=ParseMode.MARKDOWN_V2,
             reply_markup=Keyboard.inline([
@@ -135,7 +133,7 @@ class Controller(BaseHandler):
 
     async def request_name(self, update: Update, context: CallbackContext) -> int:
         """ Ask the user for his first name and last name """
-        await update.message.reply_text(self.i18n.t("strings.enter_full_name"), reply_markup=None)
+        await update.callback_query.message.chat.send_message(self.i18n.t("strings.enter_full_name"), reply_markup=None)
 
         return State.AWAIT_NAME
 
