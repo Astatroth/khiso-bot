@@ -28,7 +28,8 @@ class StateManager:
 
     def get_fallbacks(self) -> List:
         return [
-            CommandHandler('stop', self.command_handler.handle_stop)
+            CommandHandler('stop', self.command_handler.handle_stop),
+            CommandHandler('start', self.controller.start)
         ]
 
     def get_states(self) -> Dict:
