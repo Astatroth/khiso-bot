@@ -40,6 +40,7 @@ class Application:
             entry_points=self.state_manager.get_entry_points(),
             states=self.state_manager.get_states(),
             fallbacks=self.state_manager.get_fallbacks(),
+            allow_reentry=True
         )
         application.add_handler(conversation_handler)
 
