@@ -413,6 +413,7 @@ class Controller(BaseHandler):
 
                         return State.IDLE
                 case "start":
+                    context.user_data["question_number"] = 1
                     response = Olympiad().start(value, context.user_data.get("student").id)
 
                     if response is None:
