@@ -464,7 +464,8 @@ class Controller(BaseHandler):
             buttons.append((answer["answer"], "answer_{}_{}".format(answer["question_id"], answer["id"])))
 
         random.shuffle(buttons)
-
+        self.logger.info(question_type)
+        self.logger.info(question["content"])
         match question_type:
             case "Image":
                 await update.callback_query.message.chat.send_photo(
