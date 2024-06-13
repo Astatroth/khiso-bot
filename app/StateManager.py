@@ -66,7 +66,8 @@ class StateManager:
             State.IDLE: [
                 MessageHandler(filters.ALL, self.controller.idle),
                 CallbackQueryHandler(self.controller.idle, pattern='^signup_[0-9]+$'),
-                CallbackQueryHandler(self.controller.idle, pattern='^start_[0-9]+$')
+                CallbackQueryHandler(self.controller.idle, pattern='^start_[0-9]+$'),
+                CommandHandler('start', self.controller.start)
             ],
             State.AWAIT_ANSWER: [CallbackQueryHandler(self.controller.accept_answer, pattern='^answer_[0-9]+_[0-9]+$')]
         }
