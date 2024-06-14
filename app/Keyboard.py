@@ -1,6 +1,6 @@
+import re
 from telegram import KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
 from typing import Dict, List, Union
-
 
 class Keyboard:
     @staticmethod
@@ -12,6 +12,21 @@ class Keyboard:
         keyboard = []
         for text, data in buttons:
             keyboard.append(InlineKeyboardButton(text, callback_data=data))
+
+        keyboard = [keyboard[i:i + cols] for i in range(0, len(buttons), cols)]
+
+        return InlineKeyboardMarkup(keyboard)
+
+    @staticmethod
+    def inline_url(buttons: List, cols: int = 1):
+        keyboard = []
+        for text, data in buttons:
+            regex = re.compile(r"^(http)s?")
+
+            if re.match(regex, data) is None:
+                keyboard.append(InlineKeyboardButton(text, callback_data=data))
+            else:
+                keyboard.append(InlineKeyboardButton(text, url=data))
 
         keyboard = [keyboard[i:i + cols] for i in range(0, len(buttons), cols)]
 

@@ -61,16 +61,16 @@ class Controller(BaseHandler):
         if len(channels) == 0:
             return await self.request_name(update, context)
 
-        message = ""
+        buttons = []
         for channel in channels:
-            message += f"{channel.get('title')}\r\n{channel.get('url')}\r\n\r\n"
+            buttons.append((f"{channel.get('title')}", channel.get('url')))
+
+        buttons.append(("\U0001F44D " + self.i18n.t("strings.confirm_subscription"), "check_subscription"))
 
         await update.message.chat.send_message(
-            self.i18n.t("strings.demand_subscription") + "\r\n" + sanitize(message),
+            "\u274C " + sanitize(self.i18n.t("strings.demand_subscription")),
             parse_mode=ParseMode.MARKDOWN_V2,
-            reply_markup=Keyboard.inline([
-                ("\U0001F44D " + self.i18n.t("strings.confirm_subscription"), "check_subscription")
-            ])
+            reply_markup=Keyboard.inline_url(buttons)
         )
 
         return State.AWAIT_SUBSCRIPTION
