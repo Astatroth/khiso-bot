@@ -133,7 +133,10 @@ class Controller(BaseHandler):
 
     async def request_name(self, update: Update, context: CallbackContext) -> int:
         """ Ask the user for his first name and last name """
-        await update.callback_query.message.chat.send_message(self.i18n.t("strings.enter_full_name"), reply_markup=None)
+        if update.callback_query is None:
+            await update.message.reply_text(self.i18n.t("strings.enter_full_name"), reply_markup=None)
+        else:
+            await update.callback_query.message.chat.send_message(self.i18n.t("strings.enter_full_name"), reply_markup=None)
 
         return State.AWAIT_NAME
 
