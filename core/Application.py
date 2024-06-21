@@ -1,3 +1,4 @@
+import traceback
 from app.StateManager import StateManager
 from core.AppConfig import AppConfig
 from core.Logger import Logger
@@ -20,7 +21,9 @@ class Application:
         self.state_manager = StateManager()
 
     async def error_handler(self, update: object, context: CallbackContext) -> int:
-        self.log.error(msg=f"Exception while handling an update: {context.error}")
+        tb_list = traceback.format_exception(None, context.error, context.error.__traceback__)
+        tb_string = "".join(tb_list)
+        self.log.error(msg=f"Exception while handling an update: {tb_string}")
 
         if isinstance(update, Update):
             await context.bot.send_message(
