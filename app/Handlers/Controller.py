@@ -501,13 +501,12 @@ class Controller(BaseHandler):
 
         if response.get("status") == 0:
             await update.callback_query.answer()
-            await update.callback_query.message.delete()
-            await update.callback_query.message.chat.send_message(response.get("error")["message"])
+            await update.callback_query.edit_message_text(response.get("error")["message"])
+            await update.callback_query.edit_message_reply_markup(reply_markup=None)
 
             return State.IDLE
 
         await update.callback_query.answer(self.i18n.t("strings.answer_accepted"))
-        await update.callback_query.message.delete()
 
         context.user_data["question_number"] += 1
 
