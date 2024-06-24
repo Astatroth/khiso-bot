@@ -498,14 +498,16 @@ class Controller(BaseHandler):
             answer_id,
             context.user_data.get("student").id
         )
-
+        self.logger.info(update.callback_query.message)
+        self.logger.info(update.callback_query)
         if response.get("status") == 0:
-            await update.callback_query.answer()
-            await update.callback_query.edit_message_text(response.get("error")["message"])
+            await update.callback_query.message.chat.send_message(response.get("error")["message"])
             await update.callback_query.edit_message_reply_markup(reply_markup=None)
+            await update.callback_query.answer()
 
             return State.IDLE
 
+        await update.callback_query.edit_message_reply_markup(reply_markup=None)
         await update.callback_query.answer(self.i18n.t("strings.answer_accepted"))
 
         context.user_data["question_number"] += 1
