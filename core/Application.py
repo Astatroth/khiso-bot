@@ -37,7 +37,7 @@ class Application:
         return self.config.APP_ENV == "local"
 
     def run(self):
-        application = ApplicationBuilder().token(self.config.BOT_TOKEN).build()
+        application = ApplicationBuilder().token(self.config.BOT_TOKEN).read_timeout(10).write_timeout(10).build()
 
         conversation_handler = ConversationHandler(
             entry_points=self.state_manager.get_entry_points(),
