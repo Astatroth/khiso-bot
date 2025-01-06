@@ -57,12 +57,12 @@ class API:
             json=payload
         )
 
-        #if self.config.APP_DEBUG.lower() == "true":
+        # if self.config.APP_DEBUG.lower() == "true":
         self.logger.info(self.api_endpoint + endpoint)
-        self.logger.info(payload)
+        """self.logger.info(payload)
         self.logger.info(response)
         self.logger.info(response.status_code)
-        self.logger.info(response.json())
+        self.logger.info(response.json())"""
 
         try:
             response.raise_for_status()
