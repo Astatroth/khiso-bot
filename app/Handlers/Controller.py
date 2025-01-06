@@ -1,3 +1,4 @@
+import asyncio
 import random
 import telegram.error
 
@@ -11,6 +12,7 @@ from app.helpers import sanitize
 from kink import inject
 from telegram import Update
 from telegram.constants import ParseMode
+from telegram.error import TimedOut
 from telegram.ext import CallbackContext
 
 import flag
@@ -47,8 +49,8 @@ class Controller(BaseHandler):
         context.user_data['language'] = update.callback_query.data
         self.i18n.set_locale(update.callback_query.data)
 
-        await update.callback_query.answer()
-        await update.callback_query.message.delete()
+        await self.answer(update.callback_query)
+        await self.delete(update.callback_query.message)
 
         return await self.request_contact(update, context)
 
@@ -67,7 +69,8 @@ class Controller(BaseHandler):
 
         buttons.append(("\U0001F44D " + self.i18n.t("strings.confirm_subscription"), "check_subscription"))
 
-        await update.message.chat.send_message(
+        await self.safe_send_message(
+            update.message.chat,
             "\u274C " + sanitize(self.i18n.t("strings.demand_subscription")),
             parse_mode=ParseMode.MARKDOWN_V2,
             reply_markup=Keyboard.inline_url(buttons)
@@ -103,10 +106,10 @@ class Controller(BaseHandler):
                 pass
 
         if subscribed_channels < len(channels):
-            await update.callback_query.answer(text=self.i18n.t("strings.not_subscribed"))
+            await self.answer(update.callback_query, text=self.i18n.t("strings.not_subscribed"))
             return State.AWAIT_SUBSCRIPTION
 
-        await update.callback_query.message.delete()
+        await self.delete(update.callback_query.message)
 
         context.user_data['is_subscribed'] = 1
 
@@ -114,7 +117,8 @@ class Controller(BaseHandler):
 
     async def request_contact(self, update: Update, context: CallbackContext) -> int:
         """ Display "Share contact" button"""
-        await update.callback_query.message.chat.send_message(
+        await self.safe_send_message(
+            update.callback_query.message.chat,
             self.i18n.t("strings.share_your_contact"),
             reply_markup=Keyboard.reply(
                 [Keyboard.button(text=self.i18n.t("strings.share_contact"), request_contact=True)],
@@ -136,7 +140,11 @@ class Controller(BaseHandler):
         if update.callback_query is None:
             await update.message.reply_text(self.i18n.t("strings.enter_full_name"), reply_markup=None)
         else:
-            await update.callback_query.message.chat.send_message(self.i18n.t("strings.enter_full_name"), reply_markup=None)
+            await self.safe_send_message(
+                update.callback_query.message.chat,
+                self.i18n.t("strings.enter_full_name"),
+                reply_markup=None
+            )
 
         return State.AWAIT_NAME
 
@@ -175,9 +183,9 @@ class Controller(BaseHandler):
         command, value = update.callback_query.data.split('_')
         context.user_data['gender'] = int(value)
 
-        await update.callback_query.answer()
-        await update.callback_query.edit_message_reply_markup(reply_markup=None)
-        await update.callback_query.message.delete()
+        await self.answer(update.callback_query)
+        await self.safe_edit_message_reply_markup(update.callback_query, reply_markup=None)
+        await self.delete(update.callback_query.message)
 
         return await self.request_region(update, context)
 
@@ -191,14 +199,17 @@ class Controller(BaseHandler):
                 self.i18n.t("strings.select_region"),
                 reply_markup=Keyboard.inline(regions)
             )"""
-            await update.callback_query.edit_message_text(
+            await self.safe_edit_message(
+                update.callback_query,
                 self.i18n.t("strings.select_region")
             )
-            await update.callback_query.edit_message_reply_markup(
-                Keyboard.inline(regions)
+            await self.safe_edit_message_reply_markup(
+                update.callback_query,
+                reply_markup=Keyboard.inline(regions)
             )
         else:
-            await update.callback_query.message.chat.send_message(
+            await self.safe_send_message(
+                update.callback_query.message.chat,
                 self.i18n.t("strings.select_region"),
                 reply_markup=Keyboard.inline(regions)
             )
@@ -211,14 +222,14 @@ class Controller(BaseHandler):
 
         command, value = update.callback_query.data.split('_')
         if command in ["prev", "next"]:
-            await update.callback_query.answer()
+            await self.answer(update.callback_query)
             page = int(value) - 1 if command == "prev" else int(value) + 1
             regions = Region().get_regions(12, page=page)
-            await update.callback_query.edit_message_reply_markup(Keyboard.inline(regions))
+            await self.safe_edit_message_reply_markup(update.callback_query, reply_markup=Keyboard.inline(regions))
 
             return State.AWAIT_REGION
 
-        await update.callback_query.answer()
+        await self.answer(update.callback_query)
         context.user_data["region_id"] = int(value)
 
         return await self.request_district(update, context)
@@ -228,11 +239,13 @@ class Controller(BaseHandler):
         from app.Classes.District import District
 
         districts = District().get_districts(context.user_data.get("region_id"), 12)
-        await update.callback_query.edit_message_text(
-            self.i18n.t("strings.select_district")
+        await self.safe_edit_message(
+            update.callback_query,
+            text=self.i18n.t("strings.select_district")
         )
-        await update.callback_query.edit_message_reply_markup(
-            Keyboard.inline(districts)
+        await self.safe_edit_message_reply_markup(
+            update.callback_query,
+            reply_markup=Keyboard.inline(districts)
         )
 
         return State.AWAIT_DISTRICT
@@ -247,21 +260,21 @@ class Controller(BaseHandler):
 
         # Handle 'back' command
         if update.callback_query.data == "back":
-            await update.callback_query.answer()
-            await update.callback_query.message.delete()
+            await self.answer(update.callback_query)
+            await self.delete(update.callback_query.message)
             return await self.request_region(update, context)
 
         # Handle other commands
         command, value = update.callback_query.data.split('_')
         if command in ["prev", "next"]:
-            await update.callback_query.answer()
+            await self.answer(update.callback_query)
             page = int(value) - 1 if command == "prev" else int(value) + 1
             districts = District().get_districts(context.user_data.get("region_id"), 12, page=page)
-            await update.callback_query.edit_message_reply_markup(Keyboard.inline(districts))
+            await self.safe_edit_message_reply_markup(update.callback_query, reply_markup=Keyboard.inline(districts))
 
             return State.AWAIT_DISTRICT
 
-        await update.callback_query.answer()
+        await self.answer(update.callback_query)
         context.user_data['district_id'] = int(value)
 
         return await self.request_institution(update, context)
@@ -274,11 +287,13 @@ class Controller(BaseHandler):
         from app.Classes.Institution import Institution
 
         institutions = Institution().get_institutions(context.user_data.get("district_id"), 12)
-        await update.callback_query.edit_message_text(
-            self.i18n.t("strings.select_institution")
+        await self.safe_edit_message(
+            update.callback_query,
+            text=self.i18n.t("strings.select_institution")
         )
-        await update.callback_query.edit_message_reply_markup(
-            Keyboard.inline(institutions)
+        await self.safe_edit_message_reply_markup(
+            update.callback_query,
+            reply_markup=Keyboard.inline(institutions)
         )
 
         return State.AWAIT_INSTITUTION
@@ -293,21 +308,21 @@ class Controller(BaseHandler):
 
         # Handle 'back' command
         if update.callback_query.data == "back":
-            await update.callback_query.answer()
+            await self.answer(update.callback_query)
             # await update.callback_query.message.delete()
             return await self.request_district(update, context)
 
         # Handle other commands
         command, value = update.callback_query.data.split('_')
         if command in ["prev", "next"]:
-            await update.callback_query.answer()
+            await self.answer(update.callback_query)
             page = int(value) - 1 if command == "prev" else int(value) + 1
             institutions = Institution().get_institutions(context.user_data.get("district_id"), 12, page=page)
-            await update.callback_query.edit_message_reply_markup(Keyboard.inline(institutions))
+            await self.safe_edit_message_reply_markup(update.callback_query, reply_markup=Keyboard.inline(institutions))
 
             return State.AWAIT_INSTITUTION
 
-        await update.callback_query.answer()
+        await self.answer(update.callback_query)
         context.user_data['institution_id'] = int(value)
 
         return await self.request_grade(update, context)
@@ -323,11 +338,13 @@ class Controller(BaseHandler):
                 )
             )
 
-        await update.callback_query.edit_message_text(
-            self.i18n.t("strings.select_grade")
+        await self.safe_edit_message(
+            update.callback_query,
+            text=self.i18n.t("strings.select_grade")
         )
-        await update.callback_query.edit_message_reply_markup(
-            Keyboard.inline(keyboard, cols=6)
+        await self.safe_edit_message_reply_markup(
+            update.callback_query,
+            reply_markup=Keyboard.inline(keyboard, cols=6)
         )
 
         return State.AWAIT_GRADE
@@ -342,8 +359,8 @@ class Controller(BaseHandler):
         student.authenticate()
         context.user_data["student"] = student
 
-        await update.callback_query.answer()
-        await update.callback_query.message.delete()
+        await self.answer(update.callback_query)
+        await self.delete(update.callback_query.message)
 
         return await self.greet(update, context)
 
@@ -352,7 +369,8 @@ class Controller(BaseHandler):
 
         Sms().send_code(context.user_data.get("phone_number"), context.user_data.get("language"))
 
-        await update.message.chat.send_message(
+        await self.safe_send_message(
+            update.message.chat,
             self.i18n.t("strings.confirmation_code_sent") + "\r\n\r\n" + self.i18n.t("strings.enter_confirmation_code")
         )
 
@@ -375,7 +393,8 @@ class Controller(BaseHandler):
         """ Greet the user """
 
         if update.message is None:
-            await update.callback_query.message.chat.send_message(
+            await self.safe_send_message(
+                update.callback_query.message.chat,
                 self.i18n.t("strings.greet").format(sanitize(context.user_data.get("student").full_name))
             )
         else:
@@ -398,21 +417,21 @@ class Controller(BaseHandler):
                     # Try to sign up to olympiad
                     response = student.signup(value)
                     if response is None:
-                        await update.callback_query.edit_message_reply_markup(reply_markup=None)
-                        await update.callback_query.message.reply_text(self.i18n.t("errors.whoops"))
-                        await update.callback_query.answer()
+                        await self.safe_edit_message_reply_markup(update.callback_query, reply_markup=None)
+                        await self.reply_text(update.callback_query.message, self.i18n.t("errors.whoops"))
+                        await self.answer(update.callback_query)
 
                         return State.IDLE
                     else:
                         status = response.get("status")
                         if status == 0:
-                            await update.callback_query.edit_message_reply_markup(reply_markup=None)
-                            await update.callback_query.message.reply_text(response.get("error")["message"])
-                            await update.callback_query.answer()
+                            await self.safe_edit_message_reply_markup(update.callback_query, reply_markup=None)
+                            await self.reply_text(update.callback_query.message, response.get("error")["message"])
+                            await self.answer(update.callback_query)
                         else:
-                            await update.callback_query.edit_message_reply_markup(reply_markup=None)
-                            await update.callback_query.message.reply_text(self.i18n.t("strings.sign_up_success"))
-                            await update.callback_query.answer()
+                            await self.safe_edit_message_reply_markup(update.callback_query, reply_markup=None)
+                            await self.reply_text(update.callback_query.message, self.i18n.t("strings.sign_up_success"))
+                            await self.answer(update.callback_query)
 
                         return State.IDLE
                 case "start":
@@ -420,27 +439,27 @@ class Controller(BaseHandler):
                     response = Olympiad().start(value, context.user_data.get("student").id)
 
                     if response is None:
-                        await update.callback_query.edit_message_reply_markup(reply_markup=None)
-                        await update.callback_query.message.reply_text(self.i18n.t("errors.whoops"))
-                        await update.callback_query.answer()
+                        await self.safe_edit_message_reply_markup(update.callback_query, reply_markup=None)
+                        await self.reply_text(update.callback_query.message, self.i18n.t("errors.whoops"))
+                        await self.answer(update.callback_query)
 
                         return State.IDLE
                     else:
                         status = response.get("status")
                         if status == 0:
-                            await update.callback_query.edit_message_reply_markup(reply_markup=None)
-                            await update.callback_query.message.reply_text(response.get("error")["message"])
-                            await update.callback_query.answer()
+                            await self.safe_edit_message_reply_markup(update.callback_query, reply_markup=None)
+                            await self.reply_text(update.callback_query.message, response.get("error")["message"])
+                            await self.answer(update.callback_query)
 
                             return State.IDLE
 
                         context.user_data["olympiad_id"] = value
-                        await update.callback_query.answer(response.get("message"))
-                        await update.callback_query.edit_message_reply_markup(reply_markup=None)
+                        await self.answer(update.callback_query, response.get("message"))
+                        await self.safe_edit_message_reply_markup(update.callback_query, reply_markup=None)
 
                         return await self.request_question(update, context)
                 case _:
-                    await update.callback_query.edit_message_reply_markup(reply_markup=None)
+                    await self.safe_edit_message_reply_markup(update.callback_query, reply_markup=None)
 
         return State.IDLE
 
@@ -455,7 +474,7 @@ class Controller(BaseHandler):
         )
 
         if response.get("status") == 0:
-            await update.callback_query.message.chat.send_message(response.get("error")["message"])
+            await self.safe_send_message(update.callback_query.message.chat, response.get("error")["message"])
 
             return State.IDLE
 
@@ -482,7 +501,8 @@ class Controller(BaseHandler):
                     reply_markup=Keyboard.inline(buttons, 1)
                 )
             case _:
-                await update.callback_query.message.chat.send_message(
+                await self.safe_send_message(
+                    update.callback_query.message.chat,
                     text=self.i18n.t("strings.question").format(context.user_data["question_number"]) + "\r\n\r\n" + question["content"],
                     reply_markup=Keyboard.inline(buttons, 1)
                 )
@@ -501,15 +521,81 @@ class Controller(BaseHandler):
         self.logger.info(update.callback_query.message)
         self.logger.info(update.callback_query)
         if response.get("status") == 0:
-            await update.callback_query.message.chat.send_message(response.get("error")["message"])
-            await update.callback_query.edit_message_reply_markup(reply_markup=None)
-            await update.callback_query.answer()
+            await self.safe_send_message(update.callback_query.message.chat, response.get("error")["message"])
+            await self.safe_edit_message_reply_markup(update.callback_query, reply_markup=None)
+            await self.answer(update.callback_query)
 
             return State.IDLE
 
-        await update.callback_query.edit_message_reply_markup(reply_markup=None)
-        await update.callback_query.answer(self.i18n.t("strings.answer_accepted"))
+        await self.safe_edit_message_reply_markup(update.callback_query, reply_markup=None)
+        await self.answer(update.callback_query, self.i18n.t("strings.answer_accepted"))
 
         context.user_data["question_number"] += 1
 
         return await self.request_question(update, context)
+
+    @staticmethod
+    async def safe_send_message(sendable, text: str, parse_mode=None, reply_markup=None, retries=3):
+        for i in range(retries):
+            try:
+                await sendable.send_message(
+                    text,
+                    parse_mode=parse_mode,
+                    reply_markup=reply_markup
+                )
+                break
+            except TimedOut:
+                await asyncio.sleep(2 ** i)
+
+    @staticmethod
+    async def safe_edit_message(_instance, text:str, retries=3):
+        for i in range(retries):
+            try:
+                await _instance.message.edit_message_text(
+                    text=text
+                )
+                break
+            except TimedOut:
+                await asyncio.sleep(2 ** i)
+
+    @staticmethod
+    async def safe_edit_message_reply_markup(_instance, reply_markup=None, retries=3):
+        for i in range(retries):
+            try:
+                await _instance.message.edit_message_reply_markup(
+                    reply_markup=reply_markup
+                )
+
+                break
+            except TimedOut:
+                await asyncio.sleep(2 ** i)
+
+    @staticmethod
+    async def reply_text(sendable: object, text: str, retries=3):
+        for i in range(retries):
+            try:
+                await sendable.reply_text(text)
+
+                break
+            except TimedOut:
+                await asyncio.sleep(2 ** i)
+
+    @staticmethod
+    async def answer(callback_query, text=None, retries=3):
+        for i in range(retries):
+            try:
+                await callback_query.answer(text)
+
+                break
+            except TimedOut:
+                await asyncio.sleep(2 ** i)
+
+    @staticmethod
+    async def delete(message, retries=3):
+        for i in range(retries):
+            try:
+                await message.delete()
+
+                break
+            except TimedOut:
+                await asyncio.sleep(2 ** i)
