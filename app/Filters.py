@@ -16,7 +16,7 @@ class FilterName(filters.MessageFilter):
 
 class FilterDOB(filters.MessageFilter):
     def filter(self, message: Message) -> bool:
-        regex = r"(\d{2})[/.](\d{2})[/.](\d{4})"
+        regex = r"^(\d{2})[/.](\d{2})[/.](\d{4})$"
         matches = re.search(regex, message.text)
 
         return True if matches else False
@@ -24,7 +24,7 @@ class FilterDOB(filters.MessageFilter):
 
 class FilterConfirmationCode(filters.MessageFilter):
     def filter(self, message: Message) -> bool:
-        regex = r"(\d{6})"
+        regex = r"^(\d{6})$"
         matches = re.search(regex, message.text)
 
         return True if matches else False
