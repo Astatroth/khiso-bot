@@ -10,7 +10,7 @@ from app.Keyboard import Keyboard
 from app.State import State
 from app.helpers import sanitize
 from kink import inject
-from telegram import Update
+from telegram import Update, CallbackQuery
 from telegram.constants import ParseMode
 from telegram.error import TimedOut
 from telegram.ext import CallbackContext
@@ -50,7 +50,7 @@ class Controller(BaseHandler):
         self.i18n.set_locale(update.callback_query.data)
 
         await self.answer(update.callback_query)
-        await self.delete(update.callback_query.message)
+        await self.delete(update.callback_query)
 
         return await self.request_contact(update, context)
 
@@ -109,7 +109,7 @@ class Controller(BaseHandler):
             await self.answer(update.callback_query, text=self.i18n.t("strings.not_subscribed"))
             return State.AWAIT_SUBSCRIPTION
 
-        await self.delete(update.callback_query.message)
+        await self.delete(update.callback_query)
 
         context.user_data['is_subscribed'] = 1
 
@@ -185,7 +185,7 @@ class Controller(BaseHandler):
 
         await self.answer(update.callback_query)
         await self.safe_edit_message_reply_markup(update.callback_query, reply_markup=None)
-        await self.delete(update.callback_query.message)
+        await self.delete(update.callback_query)
 
         return await self.request_region(update, context)
 
@@ -261,7 +261,7 @@ class Controller(BaseHandler):
         # Handle 'back' command
         if update.callback_query.data == "back":
             await self.answer(update.callback_query)
-            await self.delete(update.callback_query.message)
+            await self.delete(update.callback_query)
             return await self.request_region(update, context)
 
         # Handle other commands
@@ -360,7 +360,7 @@ class Controller(BaseHandler):
         context.user_data["student"] = student
 
         await self.answer(update.callback_query)
-        await self.delete(update.callback_query.message)
+        await self.delete(update.callback_query)
 
         return await self.greet(update, context)
 
@@ -381,7 +381,7 @@ class Controller(BaseHandler):
         code = update.message.text
         code = Sms().validate_code(context.user_data.get("phone_number"), code, context.user_data.get("language"))
 
-        if code.get("code") is False:
+        if not code or code.get("code") is False:
             await update.message.reply_text(self.i18n.t("confirmation_code_incorrect"))
             return State.VALIDATE_CODE
 
@@ -548,10 +548,10 @@ class Controller(BaseHandler):
                 await asyncio.sleep(2 ** i)
 
     @staticmethod
-    async def safe_edit_message(_instance, text:str, retries=3):
+    async def safe_edit_message(_instance: CallbackQuery, text: str, retries=3):
         for i in range(retries):
             try:
-                await _instance.message.edit_message_text(
+                await _instance.edit_message_text(
                     text=text
                 )
                 break
@@ -559,10 +559,10 @@ class Controller(BaseHandler):
                 await asyncio.sleep(2 ** i)
 
     @staticmethod
-    async def safe_edit_message_reply_markup(_instance, reply_markup=None, retries=3):
+    async def safe_edit_message_reply_markup(_instance: CallbackQuery, reply_markup=None, retries=3):
         for i in range(retries):
             try:
-                await _instance.message.edit_message_reply_markup(
+                await _instance.edit_message_reply_markup(
                     reply_markup=reply_markup
                 )
 
@@ -591,10 +591,10 @@ class Controller(BaseHandler):
                 await asyncio.sleep(2 ** i)
 
     @staticmethod
-    async def delete(message, retries=3):
+    async def delete(callback_query: CallbackQuery, retries=3):
         for i in range(retries):
             try:
-                await message.delete()
+                await callback_query.delete_message()
 
                 break
             except TimedOut:
