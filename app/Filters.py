@@ -16,7 +16,7 @@ class FilterName(filters.MessageFilter):
 
 class FilterDOB(filters.MessageFilter):
     def filter(self, message: Message) -> bool:
-        regex = r"^(\d{2})[/.](\d{2})[/.](\d{4})$"
+        regex = r"^(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.(\d{4})$"
         matches = re.search(regex, message.text)
 
         return True if matches else False
