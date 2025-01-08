@@ -59,7 +59,7 @@ class API:
 
         # if self.config.APP_DEBUG.lower() == "true":
         self.logger.info(self.api_endpoint + endpoint)
-        #self.logger.info(payload)
+        self.logger.info(payload)
         #self.logger.info(response)
         self.logger.info(response.status_code)
         self.logger.info(response.json())
