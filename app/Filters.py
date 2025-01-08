@@ -24,6 +24,9 @@ class FilterDOB(filters.MessageFilter):
 
 class FilterConfirmationCode(filters.MessageFilter):
     def filter(self, message: Message) -> bool:
+        if not message.text:
+            return False
+
         regex = r"^(\d{6})$"
         matches = re.search(regex, message.text)
 
