@@ -24,13 +24,13 @@
   "greet": "Здравствуйте, {}!\r\n\r\nВы успешно зарегистрировались через бот. К началу олимпиады Вам пришлют специальную ссылку. До тех пор продолжайте следить за нами!",
   "sign_up_success": "Вы успешно записались на олимпиаду. Вы получите сообщение, когда она начнется.",
   "answer_accepted": "Ответ принят",
-  "question_header": "<b>Starting the \"{}\" olympiad!</b>",
+  "question_header": "<b>Началась олимпиада \"{}\"!</b>",
   "question_mid_title": "<i>Let's go!</i>",
-  "question_text": "You have to submit your answers until {}.",
-  "answer_example_title": "You have started the test!",
-  "answer_mid_title": "Please send your answers strictly in the specified format.",
-  "answer_example": "Example:",
+  "question_text": "Вы должны отправить свои ответы до {}.",
+  "answer_example_title": "Тест начался!",
+  "answer_mid_title": "Пожалуйста, перед отправкой ответов убедитесь, что они соответствуют формату.",
+  "answer_example": "Пример:",
   "example": "1.A\n2.B\n3.C\n4.D\n5.C\n6.D\n7.A\n8.B\n9.A\n10.A\n11.B\n12.D\n13.D\n14.A\n15.B\n... etc.",
-  "incorrect_answer_format": "Please send your answers in the specified format.",
-  "incorrect_answer_length": "Your number of submitted answers does not match the number of questions. Please review and submit again."
+  "incorrect_answer_format": "Убедитесь, что ответы соответствуют формату.",
+  "incorrect_answer_length": "Количество отправленных вами ответов не соответствует количеству вопросов. Пожалуйста, проверьте и отправьте снова."
 }
