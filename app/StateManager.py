@@ -69,5 +69,5 @@ class StateManager:
                 CallbackQueryHandler(self.controller.idle, pattern='^start_[0-9]+$'),
                 CommandHandler('start', self.controller.start)
             ],
-            State.AWAIT_ANSWER: [CallbackQueryHandler(self.controller.accept_answer, pattern='^answer_[0-9]+_[0-9]+$')]
+            State.AWAIT_ANSWER: [MessageHandler(filters.TEXT & ~filters.COMMAND, self.controller.accept_answer)]
         }

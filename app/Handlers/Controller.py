@@ -454,7 +454,8 @@ class Controller(BaseHandler):
                             return State.IDLE
 
                         context.user_data["olympiad_id"] = value
-                        await self.answer(update.callback_query, response.get("message"))
+
+                        await self.answer(update.callback_query)
                         await self.safe_edit_message_reply_markup(update.callback_query, reply_markup=None)
 
                         return await self.request_question(update, context)
@@ -480,59 +481,76 @@ class Controller(BaseHandler):
 
         question = response.get("question")
         question_type = question["type_label"]
-        buttons = []
-
-        for answer in list(question["answers"]):
-            buttons.append((answer["answer"], "answer_{}_{}".format(answer["question_id"], answer["id"])))
-
-        random.shuffle(buttons)
+        olympiad = response.get("olympiad")
+        context.user_data["question"] = question
 
         match question_type:
             case "Image":
                 await update.callback_query.message.chat.send_photo(
                     photo=question["content"],
                     caption=self.i18n.t("strings.question").format(context.user_data["question_number"]),
-                    reply_markup=Keyboard.inline(buttons, 1)
+                    reply_markup=None
                 )
             case "Document":
+                caption = "\U0001F44F " + self.i18n.t("strings.question_header").format(olympiad["title"])
+                caption += "\r\n\r\n\u23F3 " + self.i18n.t("strings.question_text").format(olympiad["until"])
+
                 await update.callback_query.message.chat.send_document(
                     document=question["content"],
-                    caption=self.i18n.t("strings.question").format(context.user_data["question_number"]),
-                    reply_markup=Keyboard.inline(buttons, 1)
+                    caption=caption,
+                    reply_markup=None,
+                    parse_mode=ParseMode.HTML
+                )
+
+                text = "\u203C " + self.i18n.t("strings.answer_mid_title")
+                text += "\r\n\r\n" + self.i18n.t("strings.answer_example") + "\r\n" + self.i18n.t("strings.example")
+
+                # Send example message
+                await update.callback_query.message.chat.send_message(
+                    text=text,
+                    parse_mode=ParseMode.HTML
                 )
             case _:
                 await self.safe_send_message(
                     update.callback_query.message.chat,
                     text=self.i18n.t("strings.question").format(context.user_data["question_number"]) + "\r\n\r\n" + question["content"],
-                    reply_markup=Keyboard.inline(buttons, 1)
+                    reply_markup=None
                 )
 
         return State.AWAIT_ANSWER
 
     async def accept_answer(self, update: Update, context: CallbackContext) -> int:
-        answer = update.callback_query.data
-        command, question_id, answer_id = answer.split("_")
+        olympiad = Olympiad()
+        question = context.user_data.get("question")
+        answer = olympiad.parse_answers(update.message.text)
+        if answer is None:
+            await update.message.reply_text(
+                self.i18n.t("strings.incorrect_answer_format")
+            )
 
-        response = Olympiad().send_answer(
-            question_id,
-            answer_id,
-            context.user_data.get("student").id
+            return State.AWAIT_ANSWER
+
+        if len(answer) < question["answers_count"]:
+            await update.message.reply_text(
+                self.i18n.t("strings.incorrect_answer_length")
+            )
+
+            return State.AWAIT_ANSWER
+
+        response = olympiad.send_answer(
+            question["olympiad_id"],
+            context.user_data.get("student").id,
+            answer
         )
-        self.logger.info(update.callback_query.message)
-        self.logger.info(update.callback_query)
+
         if response.get("status") == 0:
-            await self.safe_send_message(update.callback_query.message.chat, response.get("error")["message"])
-            await self.safe_edit_message_reply_markup(update.callback_query, reply_markup=None)
-            await self.answer(update.callback_query)
+            await update.message.reply_text(response.get("error")["message"])
 
             return State.IDLE
 
-        await self.safe_edit_message_reply_markup(update.callback_query, reply_markup=None)
-        await self.answer(update.callback_query, self.i18n.t("strings.answer_accepted"))
+        await update.message.reply_text(response.get("error")["message"])
 
-        context.user_data["question_number"] += 1
-
-        return await self.request_question(update, context)
+        return State.IDLE
 
     @staticmethod
     async def safe_send_message(sendable, text: str, parse_mode=None, reply_markup=None, retries=3):

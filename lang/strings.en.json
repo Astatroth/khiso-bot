@@ -24,5 +24,13 @@
   "greet": "Hello, {}!",
   "sign_up_success": "You have signed up to the olympiad. You will receive a message when it starts.",
   "answer_accepted": "Answer accepted",
-  "question": "Question #{}"
+  "question_header": "<b>Starting the \"{}\" olympiad!</b>",
+  "question_mid_title": "<i>Let's go!</i>",
+  "question_text": "You have to submit your answers until {}.",
+  "answer_example_title": "You have started the test!",
+  "answer_mid_title": "Please send your answers strictly in the specified format.",
+  "answer_example": "Example:",
+  "example": "1.A\n2.B\n3.C\n4.D\n5.C\n6.D\n7.A\n8.B\n9.A\n10.A\n11.B\n12.D\n13.D\n14.A\n15.B\n... etc.",
+  "incorrect_answer_format": "Please send your answers in the specified format.",
+  "incorrect_answer_length": "Your number of submitted answers does not match the number of questions. Please review and submit again."
 }
