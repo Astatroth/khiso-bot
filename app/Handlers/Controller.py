@@ -1,5 +1,4 @@
 import asyncio
-import random
 import telegram.error
 
 from app.Classes.Olympiad import Olympiad
@@ -9,8 +8,9 @@ from app.Handlers.BaseHandler import BaseHandler
 from app.Keyboard import Keyboard
 from app.State import State
 from app.helpers import sanitize
+from app.Filters import filter_dob, filter_full_name, filter_confirmation_code
 from kink import inject
-from telegram import Update, CallbackQuery
+from telegram import Update, CallbackQuery, ReplyKeyboardRemove
 from telegram.constants import ParseMode
 from telegram.error import TimedOut
 from telegram.ext import CallbackContext
@@ -150,6 +150,15 @@ class Controller(BaseHandler):
 
     async def set_full_name(self, update: Update, context: CallbackContext) -> int:
         """ Set the full name for the current user """
+        if not filter_full_name.filter(update.message):
+            await update.message.reply_text(
+                self.i18n.t("strings.validation_errors.full_name")
+                + "\r\n"
+                + self.i18n.t("strings.enter_full_name")
+            )
+
+            return State.AWAIT_NAME
+
         context.user_data['full_name'] = update.message.text
 
         return await self.request_date_of_birth(update, context)
@@ -162,6 +171,15 @@ class Controller(BaseHandler):
 
     async def set_date_of_birth(self, update: Update, context: CallbackContext) -> int:
         """ Set the date of birth for the current user """
+        if not filter_dob.filter(update.message):
+            await update.message.reply_text(
+                self.i18n.t("strings.validation_errors.dob")
+                + "\r\n"
+                + self.i18n.t("strings.enter_date_of_birth")
+            )
+
+            return State.AWAIT_DATE_OF_BIRTH
+
         context.user_data['date_of_birth'] = Student.clean_date_of_birth(update.message.text)
 
         return await self.request_gender(update, context)
@@ -371,13 +389,23 @@ class Controller(BaseHandler):
 
         await self.safe_send_message(
             update.message.chat,
-            self.i18n.t("strings.confirmation_code_sent") + "\r\n\r\n" + self.i18n.t("strings.enter_confirmation_code")
+            self.i18n.t("strings.confirmation_code_sent") + "\r\n\r\n" + self.i18n.t("strings.enter_confirmation_code"),
+            reply_markup=ReplyKeyboardRemove()
         )
 
         return State.VALIDATE_CODE
 
     async def validate_confirmation_code(self, update: Update, context: CallbackContext) -> int:
         """ Validate the confirmation code """
+        if not filter_confirmation_code.filter(update.message):
+            await update.message.reply_text(
+                self.i18n.t("strings.validation_errors.confirmation_code")
+                + "\r\n"
+                + self.i18n.t("strings.enter_confirmation_code")
+            )
+
+            return State.VALIDATE_CODE
+
         code = update.message.text
         code = Sms().validate_code(context.user_data.get("phone_number"), code, context.user_data.get("language"))
 

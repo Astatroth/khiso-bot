@@ -32,5 +32,10 @@
   "answer_example": "Namuna:",
   "example": "1.A\n2.B\n3.C\n4.D\n5.C\n6.D\n7.A\n8.B\n9.A\n10.A\n11.B\n12.D\n13.D\n14.A\n15.B\n... etc.",
   "incorrect_answer_format": "Iltimos, javoblaringizni belgilangan formatda yuboring.",
-  "incorrect_answer_length": "Siz yuborgan javoblar soni savollar soniga mos kelmaydi. Iltimos, tekshirib qayta yuboring."
+  "incorrect_answer_length": "Siz yuborgan javoblar soni savollar soniga mos kelmaydi. Iltimos, tekshirib qayta yuboring.",
+  "validation_errors": {
+    "full_name": "\u274C Ism va familiya belgilangan formatga mos kelmaydi.",
+    "dob": "\u274C Tug'ilgan sana belgilangan formatga mos kelmaydi.",
+    "confirmation_code": "\u274C Tasdiqlash kodi yaroqsiz."
+  }
 }

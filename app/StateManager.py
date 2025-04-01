@@ -1,4 +1,3 @@
-from app.Filters import FilterName, FilterDOB, FilterConfirmationCode
 from app.Handlers.CommandHanlder import CommandHandler as CHandler
 from app.Handlers.Controller import Controller
 from app.State import State
@@ -33,18 +32,14 @@ class StateManager:
         ]
 
     def get_states(self) -> Dict:
-        filter_name = FilterName()
-        filter_dob = FilterDOB()
-        filter_confirmation_code = FilterConfirmationCode()
-
         return {
             State.SET_LANGUAGE: [CallbackQueryHandler(self.controller.set_language, pattern='^uz|ru$')],
             State.AWAIT_SUBSCRIPTION: [
                 CallbackQueryHandler(self.controller.check_subscription, pattern='^check_subscription$')
             ],
             State.AWAIT_CONTACT: [MessageHandler(filters.CONTACT, self.controller.set_phone_number)],
-            State.AWAIT_NAME: [MessageHandler(filter_name, self.controller.set_full_name)],
-            State.AWAIT_DATE_OF_BIRTH: [MessageHandler(filter_dob, self.controller.set_date_of_birth)],
+            State.AWAIT_NAME: [MessageHandler(filters.TEXT, self.controller.set_full_name)],
+            State.AWAIT_DATE_OF_BIRTH: [MessageHandler(filters.TEXT, self.controller.set_date_of_birth)],
             State.AWAIT_GENDER: [CallbackQueryHandler(self.controller.set_gender, pattern='^gender_[1-2]$')],
             State.AWAIT_REGION: [
                 CallbackQueryHandler(self.controller.set_region, pattern='^region_[0-9]+$'),
@@ -62,7 +57,7 @@ class StateManager:
                 CallbackQueryHandler(self.controller.set_institution, pattern='^back+$')
             ],
             State.AWAIT_GRADE: [CallbackQueryHandler(self.controller.set_grade, pattern='^grade_[0-9]+$')],
-            State.VALIDATE_CODE: [MessageHandler(filter_confirmation_code, self.controller.validate_confirmation_code)],
+            State.VALIDATE_CODE: [MessageHandler(filters.TEXT, self.controller.validate_confirmation_code)],
             State.IDLE: [
                 MessageHandler(filters.ALL, self.controller.idle),
                 CallbackQueryHandler(self.controller.idle, pattern='^signup_[0-9]+$'),

@@ -32,5 +32,10 @@
   "answer_example": "Example:",
   "example": "1.A\n2.B\n3.C\n4.D\n5.C\n6.D\n7.A\n8.B\n9.A\n10.A\n11.B\n12.D\n13.D\n14.A\n15.B\n... etc.",
   "incorrect_answer_format": "Please send your answers in the specified format.",
-  "incorrect_answer_length": "Your number of submitted answers does not match the number of questions. Please review and submit again."
+  "incorrect_answer_length": "Your number of submitted answers does not match the number of questions. Please review and submit again.",
+  "validation_errors": {
+    "full_name": "\u274C Full name does not match the specified format.",
+    "dob": "\u274C Date of birth does not match the specified format.",
+    "confirmation_code": "\u274C Incorrect confirmation code."
+  }
 }
